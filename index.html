@@ -33,34 +33,38 @@
       align-items: center;
       min-height: 100vh;
       touch-action: manipulation;
+      padding: 0 8px;
     }
     header {
       width: 100%;
-      max-width: 800px;
-      padding: 12px 16px;
+      max-width: 600px;
+      padding: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--card-bg);
       border-bottom: 2px solid #334155;
+      border-radius: 0 0 8px 8px;
     }
-    h1 { font-size: 1.15rem; color: var(--accent); }
+    h1 { font-size: 1.1rem; color: var(--accent); }
     .status-bar {
       display: flex;
-      gap: 16px;
-      font-size: 0.95rem;
+      gap: 12px;
+      font-size: 0.85rem;
       font-weight: bold;
     }
     .question-panel {
       width: 100%;
-      max-width: 800px;
+      max-width: 600px;
       background: #0f172a;
-      padding: 12px;
+      padding: 10px;
       text-align: center;
-      border-bottom: 1px solid #334155;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      margin-top: 8px;
     }
     .question-text {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: #facc15;
       letter-spacing: 1px;
@@ -68,28 +72,33 @@
     .game-container {
       position: relative;
       margin-top: 8px;
+      width: 100%;
+      max-width: 600px; /* 限制最大寬度防止電腦版過大 */
+      aspect-ratio: 4 / 3; /* 鎖定標準 4:3 比例，方便響應式縮放 */
     }
     canvas {
       background-color: #020617;
       border: 2px solid #334155;
       border-radius: 8px;
       display: block;
+      width: 100%; /* 寬度自動撐滿容器 */
+      height: 100%; /* 高度自動適應 */
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
     }
-    /* 虛擬方向鍵 (平板/手機) */
+    /* 虛擬方向鍵 (專為手機與平板觸控優化) */
     .d-pad {
       display: grid;
-      grid-template-columns: repeat(3, 60px);
-      grid-template-rows: repeat(2, 54px);
+      grid-template-columns: repeat(3, 55px);
+      grid-template-rows: repeat(2, 45px);
       gap: 8px;
-      margin: 12px auto;
+      margin: 10px auto;
     }
     .d-btn {
       background: var(--card-bg);
       border: 1px solid #475569;
       color: var(--text);
       border-radius: 8px;
-      font-size: 1.4rem;
+      font-size: 1.2rem;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -111,32 +120,33 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 24px;
+      padding: 16px;
       z-index: 10;
+      overflow-y: auto; /* 防止小螢幕時內容溢出 */
     }
     .modal-content {
       width: 100%;
-      max-width: 440px;
+      max-width: 400px;
       text-align: center;
     }
     .form-group {
-      margin-bottom: 14px;
+      margin-bottom: 10px;
       text-align: left;
     }
     label {
       display: block;
-      margin-bottom: 4px;
-      font-size: 0.85rem;
+      margin-bottom: 2px;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
     select, button {
       width: 100%;
-      padding: 10px 14px;
+      padding: 8px 12px;
       background: #334155;
       border: 1px solid #475569;
       border-radius: 6px;
       color: var(--text);
-      font-size: 1rem;
+      font-size: 0.95rem;
       outline: none;
     }
     button.primary-btn {
@@ -145,17 +155,17 @@
       font-weight: bold;
       border: none;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 8px;
       transition: background 0.2s;
     }
     button.primary-btn:hover { background: var(--accent-hover); }
     .stats-table {
       width: 100%;
-      margin: 12px 0;
+      margin: 10px 0;
       border-collapse: collapse;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
-    .stats-table td { padding: 6px; text-align: left; }
+    .stats-table td { padding: 4px; text-align: left; }
     .stats-table td:last-child { text-align: right; font-weight: bold; }
   </style>
 </head>
@@ -166,22 +176,24 @@
     <div class="status-bar">
       <span>得分: <span id="scoreVal" style="color:var(--accent);">0</span></span>
       <span>生命: <span id="livesVal" style="color:#ef4444;">❤️❤️❤️</span></span>
-      <span id="trackerLabel">剩餘時間: <span id="trackerVal" style="color:#facc15;">90s</span></span>
+      <span id="trackerLabel">時間: <span id="trackerVal" style="color:#facc15;">90s</span></span>
     </div>
   </header>
 
   <div class="question-panel">
-    <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:2px;">請操控貪吃蛇吃掉正確的因式分解答案：</div>
-    <div class="question-text" id="questionBox">載入題目中...</div>
+    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:2px;">請操控貪吃蛇吃掉正確的因式分解答案：</div>
+    <div class="question-text" id="questionBox">載入中...</div>
   </div>
 
   <div class="game-container">
-    <canvas id="gameCanvas" width="600" height="420"></canvas>
+    <!-- Canvas 解析度鎖定為 800x600，透過 CSS width:100% 實現完美無損縮放 -->
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
 
     <!-- 設定選單 -->
     <div class="modal" id="startModal">
       <div class="modal-content">
-        <h2 style="margin-bottom:16px; color:var(--accent);">遊戲設定</h2>
+        <h2 style="margin-bottom:12px; color:var(--accent); font-size:1.3rem;">🎮 遊戲設定</h2>
+        
         <div class="form-group">
           <label>1. 學習課題</label>
           <select id="topicSelect">
@@ -191,6 +203,7 @@
             <option value="cross">十字相乘法：x² + bx + c</option>
           </select>
         </div>
+
         <div class="form-group">
           <label>2. 程度（變數數量）</label>
           <select id="levelSelect">
@@ -198,6 +211,7 @@
             <option value="2">程度二（2 個變數：x 與 y）</option>
           </select>
         </div>
+
         <div class="form-group">
           <label>3. 挑戰模式</label>
           <select id="modeSelect">
@@ -205,6 +219,16 @@
             <option value="target">指定題數挑戰（共 10 題）</option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label>4. 初始速度</label>
+          <select id="speedSelect">
+            <option value="slow">慢速 (Slow) — 適合冷靜思考</option>
+            <option value="medium" selected>中速 (Medium) — 標準難度</option>
+            <option value="fast">快速 (Fast) — 挑戰極限反應</option>
+          </select>
+        </div>
+
         <button class="primary-btn" id="startBtn">開始挑戰</button>
       </div>
     </div>
@@ -212,7 +236,7 @@
     <!-- 結算畫面 -->
     <div class="modal" id="endModal" style="display:none;">
       <div class="modal-content">
-        <h2 style="color:#38bdf8; margin-bottom:12px;">挑戰完成！🎉</h2>
+        <h2 style="color:#38bdf8; margin-bottom:10px; font-size:1.3rem;">挑戰完成！🎉</h2>
         <table class="stats-table">
           <tr><td>最終得分：</td><td id="resScore">0</td></tr>
           <tr><td>答對題數：</td><td id="resCorrect">0</td></tr>
@@ -240,7 +264,7 @@
           { q: "x² - 9", a: "(x - 3)(x + 3)", d: ["(x - 3)²", "(x + 3)²", "(x - 9)(x + 1)"] },
           { q: "x² - 25", a: "(x - 5)(x + 5)", d: ["(x - 5)²", "(x + 5)²", "(x - 25)(x + 1)"] },
           { q: "4x² - 1", a: "(2x - 1)(2x + 1)", d: ["(4x - 1)(x + 1)", "(2x - 1)²", "(4x + 1)²"] },
-          { q: "9x² - 49", a: "(3x - 7)(3x + 7)", d: ["(9x - 7)(x + 7)", "(3x - 7)²", "(3x + 49)(x - 1)"] },
+          { q: "9x² - 49", a: "(3x - 7)(3x + 7)", d: ["(3x - 7)²", "(3x - 7)²", "(3x + 49)(x - 1)"] },
           { q: "16 - x²", a: "(4 - x)(4 + x)", d: ["(x - 4)(x + 4)", "(4 - x)²", "(16 - x)(1 + x)"] }
         ],
         2: [
@@ -322,9 +346,9 @@
     /* --- 遊戲主狀態與變數 --- */
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const GRID_SIZE = 20;
-    const COLS = canvas.width / GRID_SIZE; // 30
-    const ROWS = canvas.height / GRID_SIZE; // 21
+    const GRID_SIZE = 25; // 提高網格大小使手機上顯示更精緻
+    const COLS = canvas.width / GRID_SIZE; // 32
+    const ROWS = canvas.height / GRID_SIZE; // 24
 
     let snake = [];
     let dir = { x: 1, y: 0 };
@@ -334,16 +358,24 @@
     let totalQuestionsAnswered = 0;
     let correctAnswersCount = 0;
 
-    let gameConfig = { topic: "all", level: 1, mode: "time" };
+    let gameConfig = { topic: "all", level: 1, mode: "time", baseSpeed: "medium" };
     let currentQuestion = null;
-    let foods = []; // 包含正確與干擾項食物
+    let foods = []; 
     let isGameOver = false;
     let isPaused = true;
     let timerInterval = null;
     let timeRemaining = 90;
     let questionsTargetRemaining = 10;
-    let gameLoopSpeed = 130; // 蛇移動間隔 (ms)
+    
+    let currentIntervalSpeed = 160; // 實際移動間隔 (ms)
     let lastRenderTime = 0;
+
+    // 快中慢速度定義
+    const SPEED_MAP = {
+      slow: 220,    // 慢
+      medium: 150,  // 中
+      fast: 100     // 快
+    };
 
     /* --- 初始化題目與選項食物 --- */
     function getCandidatePool() {
@@ -381,21 +413,33 @@
             y: Math.floor(Math.random() * (ROWS - 4)) + 2
           };
           collision = snake.some(s => s.x === pos.x && s.y === pos.y) ||
-                      foods.some(f => Math.abs(f.x - pos.x) < 4 && Math.abs(f.y - pos.y) < 3);
+                      foods.some(f => Math.abs(f.x - pos.x) < 5 && Math.abs(f.y - pos.y) < 4);
         }
         foods.push({ ...pos, ...opt });
       });
     }
 
+    /* --- 動態速度計算 --- */
+    function calculateSpeed() {
+      const baseMs = SPEED_MAP[gameConfig.baseSpeed];
+      // 蛇每變長一節（起步為 3 節，大於 3 開始加速），速度提升 4% (即間隔縮短 4%)
+      const extraSegments = Math.max(0, snake.length - 3);
+      const speedMultiplier = Math.pow(0.96, extraSegments); 
+      // 最快速度限制限制，防止快到無法遊玩
+      const minSpeedLimit = gameConfig.baseSpeed === 'fast' ? 45 : 60;
+      currentIntervalSpeed = Math.max(minSpeedLimit, baseMs * speedMultiplier);
+    }
+
     /* --- 蛇重置與遊戲重置 --- */
     function resetSnake() {
       snake = [
-        { x: 6, y: 10 },
-        { x: 5, y: 10 },
-        { x: 4, y: 10 }
+        { x: 6, y: 12 },
+        { x: 5, y: 12 },
+        { x: 4, y: 12 }
       ];
       dir = { x: 1, y: 0 };
       nextDir = { x: 1, y: 0 };
+      calculateSpeed();
     }
 
     function startGame() {
@@ -403,6 +447,7 @@
       gameConfig.topic = document.getElementById("topicSelect").value;
       gameConfig.level = parseInt(document.getElementById("levelSelect").value);
       gameConfig.mode = document.getElementById("modeSelect").value;
+      gameConfig.baseSpeed = document.getElementById("speedSelect").value;
 
       score = 0;
       lives = 3;
@@ -422,7 +467,7 @@
 
       if (gameConfig.mode === "time") {
         timeRemaining = 90;
-        document.getElementById("trackerLabel").innerHTML = '剩餘時間: <span id="trackerVal" style="color:#facc15;">90s</span>';
+        document.getElementById("trackerLabel").innerHTML = '時間: <span id="trackerVal" style="color:#facc15;">90s</span>';
         timerInterval = setInterval(() => {
           if (!isPaused && !isGameOver) {
             timeRemaining--;
@@ -432,7 +477,7 @@
         }, 1000);
       } else {
         questionsTargetRemaining = 10;
-        document.getElementById("trackerLabel").innerHTML = '剩餘題數: <span id="trackerVal" style="color:#facc15;">10</span>';
+        document.getElementById("trackerLabel").innerHTML = '剩餘: <span id="trackerVal" style="color:#facc15;">10</span>';
       }
 
       window.requestAnimationFrame(gameLoop);
@@ -449,7 +494,7 @@
       window.requestAnimationFrame(gameLoop);
 
       const delta = currentTime - lastRenderTime;
-      if (delta < gameLoopSpeed) return;
+      if (delta < currentIntervalSpeed) return;
       lastRenderTime = currentTime;
 
       update();
@@ -492,6 +537,8 @@
           playBeep('eat_correct');
           score += 100;
           correctAnswersCount++;
+          calculateSpeed(); // 蛇變長，動態加快速度
+          
           if (gameConfig.mode === "time") timeRemaining += 3; // 額外加時
           if (gameConfig.mode === "target") {
             questionsTargetRemaining--;
@@ -504,7 +551,7 @@
         } else {
           playBeep('eat_wrong');
           score = Math.max(0, score - 40);
-          snake.pop(); // 答錯身體不變長
+          snake.pop(); // 答錯身體不變長，不加速
         }
         updateUIHeader();
         generateNewQuestion();
@@ -565,15 +612,15 @@
         // 食物外框小丸子
         ctx.fillStyle = "#3b82f6";
         ctx.beginPath();
-        ctx.arc(px, py, GRID_SIZE / 2 + 1, 0, Math.PI * 2);
+        ctx.arc(px, py, GRID_SIZE / 2, 0, Math.PI * 2);
         ctx.fill();
 
         // 選項文字
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 13px Consolas, monospace";
+        ctx.font = "bold 15px Consolas, monospace";
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
-        ctx.fillText(f.text, px, py - 10);
+        ctx.fillText(f.text, px, py - 12);
       });
 
       // 繪製貪吃蛇
@@ -585,19 +632,19 @@
           seg.y * GRID_SIZE + 1,
           GRID_SIZE - 2,
           GRID_SIZE - 2,
-          index === 0 ? 6 : 3
+          index === 0 ? 8 : 4
         );
         ctx.fill();
 
         // 繪製蛇頭眼睛
         if (index === 0) {
           ctx.fillStyle = "#0f172a";
-          const eyeSize = 3;
-          let eye1 = { x: 5, y: 5 }, eye2 = { x: 15, y: 5 };
-          if (dir.x === 1) { eye1 = { x: 14, y: 5 }; eye2 = { x: 14, y: 15 }; }
-          if (dir.x === -1) { eye1 = { x: 4, y: 5 }; eye2 = { x: 4, y: 15 }; }
-          if (dir.y === 1) { eye1 = { x: 5, y: 14 }; eye2 = { x: 15, y: 14 }; }
-          if (dir.y === -1) { eye1 = { x: 5, y: 4 }; eye2 = { x: 15, y: 4 }; }
+          const eyeSize = 4;
+          let eye1 = { x: 6, y: 6 }, eye2 = { x: 16, y: 6 };
+          if (dir.x === 1) { eye1 = { x: 15, y: 6 }; eye2 = { x: 15, y: 16 }; }
+          if (dir.x === -1) { eye1 = { x: 6, y: 6 }; eye2 = { x: 6, y: 16 }; }
+          if (dir.y === 1) { eye1 = { x: 6, y: 15 }; eye2 = { x: 16, y: 15 }; }
+          if (dir.y === -1) { eye1 = { x: 6, y: 6 }; eye2 = { x: 16, y: 6 }; }
 
           ctx.fillRect(seg.x * GRID_SIZE + eye1.x, seg.y * GRID_SIZE + eye1.y, eyeSize, eyeSize);
           ctx.fillRect(seg.x * GRID_SIZE + eye2.x, seg.y * GRID_SIZE + eye2.y, eyeSize, eyeSize);
