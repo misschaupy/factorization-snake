@@ -73,19 +73,19 @@
       position: relative;
       margin-top: 8px;
       width: 100%;
-      max-width: 600px; /* 限制最大寬度防止電腦版過大 */
-      aspect-ratio: 4 / 3; /* 鎖定標準 4:3 比例，方便響應式縮放 */
+      max-width: 600px;
+      aspect-ratio: 4 / 3;
     }
     canvas {
       background-color: #020617;
       border: 2px solid #334155;
       border-radius: 8px;
       display: block;
-      width: 100%; /* 寬度自動撐滿容器 */
-      height: 100%; /* 高度自動適應 */
+      width: 100%;
+      height: 100%;
       box-shadow: 0 4px 16px rgba(0,0,0,0.5);
     }
-    /* 虛擬方向鍵 (專為手機與平板觸控優化) */
+    /* 虛擬方向鍵 */
     .d-pad {
       display: grid;
       grid-template-columns: repeat(3, 55px);
@@ -110,7 +110,7 @@
     .btn-down { grid-column: 2; grid-row: 2; }
     .btn-right { grid-column: 3; grid-row: 2; }
 
-    /* 彈窗畫面 (選單/結算) */
+    /* 彈窗畫面 */
     .modal {
       position: absolute;
       inset: 0;
@@ -122,7 +122,7 @@
       align-items: center;
       padding: 16px;
       z-index: 10;
-      overflow-y: auto; /* 防止小螢幕時內容溢出 */
+      overflow-y: auto;
     }
     .modal-content {
       width: 100%;
@@ -181,12 +181,11 @@
   </header>
 
   <div class="question-panel">
-    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:2px;">請操控貪吃蛇吃掉正確的因式分解答案：</div>
+    <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:2px;">請操控貪吃蛇吃掉正確的因式分解答案（可安全穿牆）：</div>
     <div class="question-text" id="questionBox">載入中...</div>
   </div>
 
   <div class="game-container">
-    <!-- Canvas 解析度鎖定為 800x600，透過 CSS width:100% 實現完美無損縮放 -->
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
     <!-- 設定選單 -->
@@ -212,471 +211,4 @@
           </select>
         </div>
 
-        <div class="form-group">
-          <label>3. 挑戰模式</label>
-          <select id="modeSelect">
-            <option value="time">限時挑戰模式（90 秒）</option>
-            <option value="target">指定題數挑戰（共 10 題）</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>4. 初始速度</label>
-          <select id="speedSelect">
-            <option value="slow">慢速 (Slow) — 適合冷靜思考</option>
-            <option value="medium" selected>中速 (Medium) — 標準難度</option>
-            <option value="fast">快速 (Fast) — 挑戰極限反應</option>
-          </select>
-        </div>
-
-        <button class="primary-btn" id="startBtn">開始挑戰</button>
-      </div>
-    </div>
-
-    <!-- 結算畫面 -->
-    <div class="modal" id="endModal" style="display:none;">
-      <div class="modal-content">
-        <h2 style="color:#38bdf8; margin-bottom:10px; font-size:1.3rem;">挑戰完成！🎉</h2>
-        <table class="stats-table">
-          <tr><td>最終得分：</td><td id="resScore">0</td></tr>
-          <tr><td>答對題數：</td><td id="resCorrect">0</td></tr>
-          <tr><td>總作答題數：</td><td id="resTotal">0</td></tr>
-          <tr><td>準確率：</td><td id="resAccuracy">0%</td></tr>
-        </table>
-        <button class="primary-btn" id="restartBtn">再玩一次</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 螢幕方向鍵 -->
-  <div class="d-pad">
-    <div class="d-btn btn-up" id="btnUp">▲</div>
-    <div class="d-btn btn-left" id="btnLeft">◀</div>
-    <div class="d-btn btn-down" id="btnDown">▼</div>
-    <div class="d-btn btn-right" id="btnRight">▶</div>
-  </div>
-
-  <script>
-    /* --- 題庫定義 (包含程度一及程度二) --- */
-    const QUESTION_BANK = {
-      diff_sq: {
-        1: [
-          { q: "x² - 9", a: "(x - 3)(x + 3)", d: ["(x - 3)²", "(x + 3)²", "(x - 9)(x + 1)"] },
-          { q: "x² - 25", a: "(x - 5)(x + 5)", d: ["(x - 5)²", "(x + 5)²", "(x - 25)(x + 1)"] },
-          { q: "4x² - 1", a: "(2x - 1)(2x + 1)", d: ["(4x - 1)(x + 1)", "(2x - 1)²", "(4x + 1)²"] },
-          { q: "9x² - 49", a: "(3x - 7)(3x + 7)", d: ["(3x - 7)²", "(3x - 7)²", "(3x + 49)(x - 1)"] },
-          { q: "16 - x²", a: "(4 - x)(4 + x)", d: ["(x - 4)(x + 4)", "(4 - x)²", "(16 - x)(1 + x)"] }
-        ],
-        2: [
-          { q: "x² - 4y²", a: "(x - 2y)(x + 2y)", d: ["(x - 2y)²", "(x + 2y)²", "(x - 4y)(x + y)"] },
-          { q: "9x² - 16y²", a: "(3x - 4y)(3x + 4y)", d: ["(3x - 4y)²", "(9x - 4y)(x + 4y)", "(3x + 4y)²"] },
-          { q: "25x² - 36y²", a: "(5x - 6y)(5x + 6y)", d: ["(5x - 6y)²", "(25x - 6y)(x + 6y)", "(5x + 6y)²"] },
-          { q: "49x² - y²", a: "(7x - y)(7x + y)", d: ["(7x - y)²", "(49x - y)(x + y)", "(7x + y)²"] },
-          { q: "2x² - 18y²", a: "2(x - 3y)(x + 3y)", d: ["(2x - 6y)(x + 3y)", "2(x - 3y)²", "(x - 3y)(2x + 6y)"] }
-        ]
-      },
-      perf_sq: {
-        1: [
-          { q: "x² + 6x + 9", a: "(x + 3)²", d: ["(x - 3)²", "(x + 1)(x + 9)", "(x + 3)(x - 3)"] },
-          { q: "x² - 10x + 25", a: "(x - 5)²", d: ["(x + 5)²", "(x - 5)(x + 5)", "(x - 1)(x - 25)"] },
-          { q: "x² + 14x + 49", a: "(x + 7)²", d: ["(x - 7)²", "(x + 7)(x - 7)", "(x + 1)(x + 49)"] },
-          { q: "4x² + 12x + 9", a: "(2x + 3)²", d: ["(4x + 3)²", "(2x - 3)²", "(2x + 1)(2x + 9)"] },
-          { q: "9x² - 24x + 16", a: "(3x - 4)²", d: ["(3x + 4)²", "(9x - 4)²", "(3x - 4)(3x + 4)"] }
-        ],
-        2: [
-          { q: "x² + 4xy + 4y²", a: "(x + 2y)²", d: ["(x - 2y)²", "(x + 2y)(x - 2y)", "(x + 4y)(x + y)"] },
-          { q: "x² - 8xy + 16y²", a: "(x - 4y)²", d: ["(x + 4y)²", "(x - 4y)(x + 4y)", "(x - 2y)(x - 8y)"] },
-          { q: "4x² + 20xy + 25y²", a: "(2x + 5y)²", d: ["(4x + 5y)²", "(2x - 5y)²", "(2x + 5y)(2x - 5y)"] },
-          { q: "9x² - 12xy + 4y²", a: "(3x - 2y)²", d: ["(3x + 2y)²", "(9x - 2y)²", "(3x - 2y)(3x + 2y)"] },
-          { q: "2x² + 20xy + 50y²", a: "2(x + 5y)²", d: ["(2x + 10y)²", "2(x - 5y)²", "2(x + 5y)(x - 5y)"] }
-        ]
-      },
-      cross: {
-        1: [
-          { q: "x² + 5x + 6", a: "(x + 2)(x + 3)", d: ["(x + 1)(x + 6)", "(x - 2)(x - 3)", "(x + 5)(x + 1)"] },
-          { q: "x² - 7x + 12", a: "(x - 3)(x - 4)", d: ["(x - 2)(x - 6)", "(x + 3)(x + 4)", "(x - 1)(x - 12)"] },
-          { q: "x² + 2x - 8", a: "(x + 4)(x - 2)", d: ["(x - 4)(x + 2)", "(x + 8)(x - 1)", "(x - 8)(x + 1)"] },
-          { q: "x² - 3x - 10", a: "(x - 5)(x + 2)", d: ["(x + 5)(x - 2)", "(x - 10)(x + 1)", "(x - 5)(x - 2)"] },
-          { q: "2x² + 5x + 2", a: "(2x + 1)(x + 2)", d: ["(2x + 2)(x + 1)", "(x + 1)(2x + 4)", "(2x - 1)(x - 2)"] }
-        ],
-        2: [
-          { q: "x² + 3xy + 2y²", a: "(x + y)(x + 2y)", d: ["(x + 3y)(x + y)", "(x - y)(x - 2y)", "(x + 2y)²"] },
-          { q: "x² - 5xy + 6y²", a: "(x - 2y)(x - 3y)", d: ["(x + 2y)(x + 3y)", "(x - y)(x - 6y)", "(x - 5y)(x + y)"] },
-          { q: "x² + xy - 12y²", a: "(x + 4y)(x - 3y)", d: ["(x - 4y)(x + 3y)", "(x + 6y)(x - 2y)", "(x - 12y)(x + y)"] },
-          { q: "2x² + 5xy + 2y²", a: "(2x + y)(x + 2y)", d: ["(2x + 2y)(x + y)", "(2x - y)(x - 2y)", "(x + y)(2x + 4y)"] },
-          { q: "3x² - 5xy - 2y²", a: "(3x + y)(x - 2y)", d: ["(3x - y)(x + 2y)", "(3x - 2y)(x + y)", "(x - y)(3x + 2y)"] }
-        ]
-      }
-    };
-
-    /* --- Web Audio 音效產生器 --- */
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playBeep(type) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      if (type === 'eat_correct') {
-        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-        osc.frequency.exponentialRampToValueAtTime(783.99, audioCtx.currentTime + 0.15); // G5
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.15);
-      } else if (type === 'eat_wrong') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
-        osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2);
-        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
-      } else if (type === 'crash') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
-      }
-    }
-
-    /* --- 遊戲主狀態與變數 --- */
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const GRID_SIZE = 25; // 提高網格大小使手機上顯示更精緻
-    const COLS = canvas.width / GRID_SIZE; // 32
-    const ROWS = canvas.height / GRID_SIZE; // 24
-
-    let snake = [];
-    let dir = { x: 1, y: 0 };
-    let nextDir = { x: 1, y: 0 };
-    let score = 0;
-    let lives = 3;
-    let totalQuestionsAnswered = 0;
-    let correctAnswersCount = 0;
-
-    let gameConfig = { topic: "all", level: 1, mode: "time", baseSpeed: "medium" };
-    let currentQuestion = null;
-    let foods = []; 
-    let isGameOver = false;
-    let isPaused = true;
-    let timerInterval = null;
-    let timeRemaining = 90;
-    let questionsTargetRemaining = 10;
-    
-    let currentIntervalSpeed = 160; // 實際移動間隔 (ms)
-    let lastRenderTime = 0;
-
-    // 快中慢速度定義
-    const SPEED_MAP = {
-      slow: 220,    // 慢
-      medium: 150,  // 中
-      fast: 100     // 快
-    };
-
-    /* --- 初始化題目與選項食物 --- */
-    function getCandidatePool() {
-      const { topic, level } = gameConfig;
-      let pool = [];
-      if (topic === "all") {
-        pool = [...QUESTION_BANK.diff_sq[level], ...QUESTION_BANK.perf_sq[level], ...QUESTION_BANK.cross[level]];
-      } else {
-        pool = QUESTION_BANK[topic][level];
-      }
-      return pool;
-    }
-
-    function generateNewQuestion() {
-      const pool = getCandidatePool();
-      currentQuestion = pool[Math.floor(Math.random() * pool.length)];
-      document.getElementById("questionBox").innerText = currentQuestion.q;
-
-      // 產生選項 (1 個正解 + 2 個干擾項)
-      const shuffledDistractors = [...currentQuestion.d].sort(() => 0.5 - Math.random());
-      const options = [
-        { text: currentQuestion.a, isCorrect: true },
-        { text: shuffledDistractors[0], isCorrect: false },
-        { text: shuffledDistractors[1], isCorrect: false }
-      ].sort(() => 0.5 - Math.random());
-
-      // 隨機放置在地圖上，避免重疊或太靠近蛇頭
-      foods = [];
-      options.forEach(opt => {
-        let pos;
-        let collision = true;
-        while (collision) {
-          pos = {
-            x: Math.floor(Math.random() * (COLS - 4)) + 2,
-            y: Math.floor(Math.random() * (ROWS - 4)) + 2
-          };
-          collision = snake.some(s => s.x === pos.x && s.y === pos.y) ||
-                      foods.some(f => Math.abs(f.x - pos.x) < 5 && Math.abs(f.y - pos.y) < 4);
-        }
-        foods.push({ ...pos, ...opt });
-      });
-    }
-
-    /* --- 動態速度計算 --- */
-    function calculateSpeed() {
-      const baseMs = SPEED_MAP[gameConfig.baseSpeed];
-      // 蛇每變長一節（起步為 3 節，大於 3 開始加速），速度提升 4% (即間隔縮短 4%)
-      const extraSegments = Math.max(0, snake.length - 3);
-      const speedMultiplier = Math.pow(0.96, extraSegments); 
-      // 最快速度限制限制，防止快到無法遊玩
-      const minSpeedLimit = gameConfig.baseSpeed === 'fast' ? 45 : 60;
-      currentIntervalSpeed = Math.max(minSpeedLimit, baseMs * speedMultiplier);
-    }
-
-    /* --- 蛇重置與遊戲重置 --- */
-    function resetSnake() {
-      snake = [
-        { x: 6, y: 12 },
-        { x: 5, y: 12 },
-        { x: 4, y: 12 }
-      ];
-      dir = { x: 1, y: 0 };
-      nextDir = { x: 1, y: 0 };
-      calculateSpeed();
-    }
-
-    function startGame() {
-      // 讀取介面設定
-      gameConfig.topic = document.getElementById("topicSelect").value;
-      gameConfig.level = parseInt(document.getElementById("levelSelect").value);
-      gameConfig.mode = document.getElementById("modeSelect").value;
-      gameConfig.baseSpeed = document.getElementById("speedSelect").value;
-
-      score = 0;
-      lives = 3;
-      totalQuestionsAnswered = 0;
-      correctAnswersCount = 0;
-      isGameOver = false;
-      isPaused = false;
-
-      updateUIHeader();
-      resetSnake();
-      generateNewQuestion();
-
-      document.getElementById("startModal").style.display = "none";
-      document.getElementById("endModal").style.display = "none";
-
-      if (timerInterval) clearInterval(timerInterval);
-
-      if (gameConfig.mode === "time") {
-        timeRemaining = 90;
-        document.getElementById("trackerLabel").innerHTML = '時間: <span id="trackerVal" style="color:#facc15;">90s</span>';
-        timerInterval = setInterval(() => {
-          if (!isPaused && !isGameOver) {
-            timeRemaining--;
-            document.getElementById("trackerVal").innerText = `${timeRemaining}s`;
-            if (timeRemaining <= 0) endGame();
-          }
-        }, 1000);
-      } else {
-        questionsTargetRemaining = 10;
-        document.getElementById("trackerLabel").innerHTML = '剩餘: <span id="trackerVal" style="color:#facc15;">10</span>';
-      }
-
-      window.requestAnimationFrame(gameLoop);
-    }
-
-    function updateUIHeader() {
-      document.getElementById("scoreVal").innerText = score;
-      document.getElementById("livesVal").innerText = "❤️".repeat(Math.max(0, lives));
-    }
-
-    /* --- 主遊戲循環 (Game Loop) --- */
-    function gameLoop(currentTime) {
-      if (isGameOver) return;
-      window.requestAnimationFrame(gameLoop);
-
-      const delta = currentTime - lastRenderTime;
-      if (delta < currentIntervalSpeed) return;
-      lastRenderTime = currentTime;
-
-      update();
-      draw();
-    }
-
-    function update() {
-      dir = { ...nextDir };
-      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-
-      // 撞牆檢查
-      if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
-        handleLifeLoss();
-        return;
-      }
-
-      // 撞自身檢查
-      for (let segment of snake) {
-        if (head.x === segment.x && head.y === segment.y) {
-          handleLifeLoss();
-          return;
-        }
-      }
-
-      snake.unshift(head);
-
-      // 食物判定
-      let eatenIndex = -1;
-      for (let i = 0; i < foods.length; i++) {
-        if (head.x === foods[i].x && head.y === foods[i].y) {
-          eatenIndex = i;
-          break;
-        }
-      }
-
-      if (eatenIndex !== -1) {
-        const eatenFood = foods[eatenIndex];
-        totalQuestionsAnswered++;
-        if (eatenFood.isCorrect) {
-          playBeep('eat_correct');
-          score += 100;
-          correctAnswersCount++;
-          calculateSpeed(); // 蛇變長，動態加快速度
-          
-          if (gameConfig.mode === "time") timeRemaining += 3; // 額外加時
-          if (gameConfig.mode === "target") {
-            questionsTargetRemaining--;
-            document.getElementById("trackerVal").innerText = questionsTargetRemaining;
-            if (questionsTargetRemaining <= 0) {
-              endGame();
-              return;
-            }
-          }
-        } else {
-          playBeep('eat_wrong');
-          score = Math.max(0, score - 40);
-          snake.pop(); // 答錯身體不變長，不加速
-        }
-        updateUIHeader();
-        generateNewQuestion();
-      } else {
-        snake.pop(); // 正常移動
-      }
-    }
-
-    function handleLifeLoss() {
-      playBeep('crash');
-      lives--;
-      updateUIHeader();
-      if (lives <= 0) {
-        endGame();
-      } else {
-        resetSnake();
-      }
-    }
-
-    function endGame() {
-      isGameOver = true;
-      if (timerInterval) clearInterval(timerInterval);
-
-      document.getElementById("resScore").innerText = score;
-      document.getElementById("resCorrect").innerText = correctAnswersCount;
-      document.getElementById("resTotal").innerText = totalQuestionsAnswered;
-      const acc = totalQuestionsAnswered > 0 ? Math.round((correctAnswersCount / totalQuestionsAnswered) * 100) : 0;
-      document.getElementById("resAccuracy").innerText = `${acc}%`;
-
-      document.getElementById("endModal").style.display = "flex";
-    }
-
-    /* --- 畫布繪製 Canvas Rendering --- */
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 繪製背景格線
-      ctx.strokeStyle = "#1e293b";
-      ctx.lineWidth = 1;
-      for (let x = 0; x < canvas.width; x += GRID_SIZE) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += GRID_SIZE) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-
-      // 繪製食物選項泡泡 (包含代數文字)
-      foods.forEach(f => {
-        const px = f.x * GRID_SIZE + GRID_SIZE / 2;
-        const py = f.y * GRID_SIZE + GRID_SIZE / 2;
-
-        // 食物外框小丸子
-        ctx.fillStyle = "#3b82f6";
-        ctx.beginPath();
-        ctx.arc(px, py, GRID_SIZE / 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 選項文字
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 15px Consolas, monospace";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "bottom";
-        ctx.fillText(f.text, px, py - 12);
-      });
-
-      // 繪製貪吃蛇
-      snake.forEach((seg, index) => {
-        ctx.fillStyle = index === 0 ? "#38bdf8" : "#0284c7";
-        ctx.beginPath();
-        ctx.roundRect(
-          seg.x * GRID_SIZE + 1,
-          seg.y * GRID_SIZE + 1,
-          GRID_SIZE - 2,
-          GRID_SIZE - 2,
-          index === 0 ? 8 : 4
-        );
-        ctx.fill();
-
-        // 繪製蛇頭眼睛
-        if (index === 0) {
-          ctx.fillStyle = "#0f172a";
-          const eyeSize = 4;
-          let eye1 = { x: 6, y: 6 }, eye2 = { x: 16, y: 6 };
-          if (dir.x === 1) { eye1 = { x: 15, y: 6 }; eye2 = { x: 15, y: 16 }; }
-          if (dir.x === -1) { eye1 = { x: 6, y: 6 }; eye2 = { x: 6, y: 16 }; }
-          if (dir.y === 1) { eye1 = { x: 6, y: 15 }; eye2 = { x: 16, y: 15 }; }
-          if (dir.y === -1) { eye1 = { x: 6, y: 6 }; eye2 = { x: 16, y: 6 }; }
-
-          ctx.fillRect(seg.x * GRID_SIZE + eye1.x, seg.y * GRID_SIZE + eye1.y, eyeSize, eyeSize);
-          ctx.fillRect(seg.x * GRID_SIZE + eye2.x, seg.y * GRID_SIZE + eye2.y, eyeSize, eyeSize);
-        }
-      });
-    }
-
-    /* --- 控制處理 (鍵盤與虛擬搖桿) --- */
-    function changeDirection(newDir) {
-      if (newDir.x === -dir.x && newDir.y === -dir.y) return; // 禁止反向回頭
-      nextDir = newDir;
-    }
-
-    window.addEventListener("keydown", e => {
-      switch (e.key) {
-        case "ArrowUp": case "w": case "W": changeDirection({ x: 0, y: -1 }); break;
-        case "ArrowDown": case "s": case "S": changeDirection({ x: 0, y: 1 }); break;
-        case "ArrowLeft": case "a": case "A": changeDirection({ x: -1, y: 0 }); break;
-        case "ArrowRight": case "d": case "D": changeDirection({ x: 1, y: 0 }); break;
-      }
-    });
-
-    document.getElementById("btnUp").onclick = () => changeDirection({ x: 0, y: -1 });
-    document.getElementById("btnDown").onclick = () => changeDirection({ x: 0, y: 1 });
-    document.getElementById("btnLeft").onclick = () => changeDirection({ x: -1, y: 0 });
-    document.getElementById("btnRight").onclick = () => changeDirection({ x: 1, y: 0 });
-
-    document.getElementById("startBtn").onclick = startGame;
-    document.getElementById("restartBtn").onclick = () => {
-      document.getElementById("endModal").style.display = "none";
-      document.getElementById("startModal").style.display = "flex";
-    };
-  </script>
-</body>
-</html>
+        <div class="form-group"
